@@ -964,7 +964,13 @@ FString FHLSLMaterialFunctionGenerator::GenerateFunctionCode(const UHLSLMaterial
 		Code += Struct;
 	}
 
-	Code += Function.Body.Replace(TEXT("return"), TEXT("return 0.f"));
+	/// original code to be modified
+	// Code += Function.Body.Replace(TEXT("return"), TEXT("return 0.f"));
+	/// end of original code
+	
+	/// FIX by TDXH: 
+	Code += Function.Body;
+	/// end of FIX
 
 	if (Library.bAccurateErrors)
 	{

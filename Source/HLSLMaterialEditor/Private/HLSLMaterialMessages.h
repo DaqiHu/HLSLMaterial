@@ -9,12 +9,29 @@ class UHLSLMaterialFunctionLibrary;
 class FHLSLMaterialMessages
 {
 public:
-	template <typename FmtType, typename... Types>
-	static void ShowError(const FmtType& Fmt, Types... Args)
+	// template <typename FmtType, typename... Types>
+	// static void ShowError(const FmtType& Fmt, Types... Args)
+	// {
+	// 	ShowErrorImpl(FString::Printf(Fmt, Args...));
+	// }
+	
+	static void ShowError(const TCHAR* Fmt, ...)
 	{
-		ShowErrorImpl(FString::Printf(Fmt, Args...));
+		TCHAR TempMsg[1024];
+		va_list Args;
+    
+		va_start(Args, Fmt);
+		FCString::GetVarArgs(TempMsg, UE_ARRAY_COUNT(TempMsg), Fmt, Args);
+		va_end(Args);
+    
+		ShowErrorImpl(TempMsg);
 	}
 
+	static void ShowError(const FString& Message)
+	{
+		ShowErrorImpl(Message);
+	}
+	
 	class FLibraryScope
 	{
 	public:
