@@ -38,6 +38,7 @@
 #include "Materials/MaterialExpressionTextureObjectParameter.h"
 
 #include "Editor/MaterialEditor/Private/MaterialEditor.h"
+#include "Materials/MaterialExpressionSceneTexture.h"
 
 FString FHLSLMaterialFunctionGenerator::GenerateFunction(
 	UHLSLMaterialFunctionLibrary& Library,
@@ -266,6 +267,8 @@ FString FHLSLMaterialFunctionGenerator::GenerateFunction(
 	const bool bVertexColorUsed = Function.Body.Contains("Parameters.VertexColor", ESearchCase::CaseSensitive);
 	// Detect whether NEEDS_WORLD_POSITION_EXCLUDING_SHADER_OFFSETS is required
 	const bool bNeedsWorldPositionExcludingShaderOffsets = Function.Body.Contains("GetWorldPosition_NoMaterialOffsets", ESearchCase::CaseSensitive);
+	// Detect used SceneTextureLookup
+	const bool bSceneTextureUsed = Function.Body.Contains("SceneTextureLookup", ESearchCase::CaseSensitive);
 
 	///////////////////////////////////////////////////////////////////////////////////
 	//// Past this point, try to never error out as it'll break existing functions ////
@@ -690,6 +693,21 @@ FString FHLSLMaterialFunctionGenerator::GenerateFunction(
 			FCustomInput& CustomInput = MaterialExpressionCustom->Inputs.Emplace_GetRef();
 			CustomInput.InputName = "DUMMY_WORLD_POSITION_INPUT";
 			CustomInput.Input.Connect(0, WorldPosition);
+		}
+
+		if (bSceneTextureUsed)
+		{
+			UMaterialExpressionSceneTexture* SceneTexture = NewObject<UMaterialExpressionSceneTexture>(MaterialFunction);
+			SceneTexture->MaterialExpressionGuid = FGuid::NewGuid();
+			SceneTexture->bCollapsed = true;
+			SceneTexture->SceneTextureId = ESceneTextureId::PPI_PostProcessInput0;
+			SceneTexture->MaterialExpressionEditorX = MaterialExpressionCustom->MaterialExpressionEditorX - 200;
+			SceneTexture->MaterialExpressionEditorY = MaterialExpressionCustom->MaterialExpressionEditorY;
+			MaterialFunction->FunctionExpressions.Add(SceneTexture);
+			
+			FCustomInput& CustomInput = MaterialExpressionCustom->Inputs.Emplace_GetRef();
+			CustomInput.InputName = "DUMMY_SCENE_TEXTURE_INPUT";
+			CustomInput.Input.Connect(0, SceneTexture);
 		}
 
 		MaterialExpressionCustom->PostEditChange();
